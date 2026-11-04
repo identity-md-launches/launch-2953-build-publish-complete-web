@@ -529,7 +529,7 @@ function Editor() {
       <main id="workspace">
         <div className="workspace-heading">
           <div>
-            <h1>Your overlay, your way.</h1>
+            <h1>Customize your OBS overlay</h1>
             <p>Make the wheel part of your stream.</p>
           </div>
           <div className="project-tools">

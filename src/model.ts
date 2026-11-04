@@ -1,3 +1,5 @@
+import { labelLines } from "./label-layout";
+
 export const WIDTH = 1280;
 export const HEIGHT = 720;
 export const MAX_WIDGETS = 12;
@@ -155,25 +157,40 @@ export function templateConfig(
     if (template === "neon")
       c.widgets[4].text = "One more round.\nOne more squeek.";
   }
+  c.widgets = c.widgets.map(clampWidget);
   return c;
 }
 export function clampWidget(widget: Widget): Widget {
   const size = widgetSize(widget);
-  const scale = Math.max(0.5, Math.min(1.6, widget.scale));
+  const scale = Math.max(
+    0.5,
+    Math.min(1.6, widget.scale, WIDTH / size.width, (HEIGHT - 32) / size.height),
+  );
   return {
     ...widget,
     scale,
-    x: Math.round(Math.max(0, Math.min(WIDTH - size.width * scale, widget.x))),
-    y: Math.round(
-      Math.max(0, Math.min(HEIGHT - size.height * scale - 32, widget.y)),
+    x: Math.max(
+      0, Math.min(Math.floor(WIDTH - size.width * scale), Math.round(widget.x)),
+    ),
+    y: Math.max(
+      0, Math.min(Math.floor(HEIGHT - size.height * scale - 32), Math.round(widget.y)),
     ),
   };
 }
 export function widgetSize(widget: Widget) {
   const size = WIDGETS[widget.type];
+  // Reserve the widest progress value (100.0%), or the icon and its gap.
+  const adornment = widget.type === "progress"
+    ? 104
+    : ["speed", "block", "events"].includes(widget.type) ? 34 : 0;
+  const fontSize = widget.type === "text" ? 14 : 20;
+  const label = widget.type === "text" && widget.label === WIDGETS.text.name
+    ? "Welcome to the stream"
+    : widget.label;
+  const lines = labelLines(label, size.width - 44 - adornment, fontSize);
   return {
     width: size.width,
-    height: size.height + (widget.label.length > 20 ? 70 : 0),
+    height: size.height + 8 + Math.ceil(Math.max(0, lines - 1) * fontSize * 1.4),
   };
 }
 function obj(value: unknown): Record<string, unknown> {
@@ -251,15 +268,17 @@ export function validateConfig(value: unknown): StudioConfig {
     };
     if (widget.text.split("\n").length > 4)
       throw new Error("Custom text can have up to four lines.");
-    const clamped = clampWidget(widget);
+    // Preserve existing version-1 presets: label growth may move a widget upward or
+    // limit its scale. Reject coordinates that were outside even the original box.
+    const original = WIDGETS[type];
     if (
-      Math.abs(clamped.x - widget.x) > 0.51 ||
-      Math.abs(clamped.y - widget.y) > 0.51
+      widget.x + original.width * widget.scale > WIDTH + 0.51 ||
+      widget.y + original.height * widget.scale > HEIGHT - 32 + 0.51
     )
       throw new Error(
         "A widget is outside the canvas. Move it inside the 1280 × 720 safe area.",
       );
-    return widget;
+    return clampWidget(widget);
   });
   const name = str(c.name, "Preset name", 48).trim();
   if (!name) throw new Error("Give the preset a name.");

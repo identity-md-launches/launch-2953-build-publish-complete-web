@@ -9,3 +9,5 @@ The implementation and review applied the pinned Better Interface design guidanc
 The Squeekchain response schemas in `src/schemas/` are unmodified public API definitions from `https://docs.squeekchain.com/assets/api/`, retrieved on 2026-11-04. Public API response fixtures under `scripts/fixtures/` were captured on that date for deterministic tests; the production client never imports them.
 
 React, Ajv, ajv-formats and the development tools retain their respective upstream licenses. Package names, exact versions and integrity hashes are recorded in package-lock.json; bundled third-party copyright/license comments are retained by the production build.
+
+The generated standalone validators include Ajv's Unicode-length helper and ajv-formats' format functions. Their MIT notices are also retained in `public/licenses/validator-runtime.txt`, copied into `dist/licenses/validator-runtime.txt` for static distribution. The Ajv compiler is used only by the Node build step.

@@ -1,9 +1,5 @@
 import { useEffect, useReducer } from "react";
-import Ajv2020 from "ajv/dist/2020.js";
-import addFormats from "ajv-formats";
-import statusSchema from "./schemas/status.json";
-import coreSchema from "./schemas/core.json";
-import eventsSchema from "./schemas/events.json";
+import * as validators from "./generated/validators.js";
 import type { DataMode } from "./model";
 
 export const API_BASE = "https://api.squeekchain.com";
@@ -84,30 +80,15 @@ export const emptyFeed = (): Feed => ({
   events: fresh(),
   now: Date.now(),
 });
-const ajv = new Ajv2020({
-  strict: false,
-  allErrors: false,
-  validateFormats: true,
-});
-addFormats(ajv);
-for (const bits of [64, 96, 256])
-  ajv.addFormat(`uint${bits}-decimal`, {
-    type: "string",
-    validate: (v: string) =>
-      /^(0|[1-9]\d*)$/.test(v) &&
-      v.length <= 78 &&
-      BigInt(v) < 1n << BigInt(bits),
-  });
-const validators = {
-  status: ajv.compile(statusSchema),
-  core: ajv.compile(coreSchema),
-  events: ajv.compile(eventsSchema),
-};
 export function validateApi(channel: Channel, value: unknown) {
-  if (!validators[channel](value))
+  if (!validators[channel](value)) {
+    const issues = validators[channel].errors || [];
+    const detail = issues.find((e) => e.keyword === "format") ||
+      issues.find((e) => e.instancePath) || issues[0];
     throw new Error(
-      `Unsupported or invalid ${channel} response. Waiting for a compatible API response.`,
+      `Schema mismatch in ${channel} response${detail ? ` at ${detail.instancePath || "/"}: ${detail.message || detail.keyword}` : ""}. Waiting for a compatible API response.`,
     );
+  }
   return value as StatusData | CoreData | EventsData;
 }
 function retryTime(header: string | null, now: number, fallback: number) {
@@ -176,12 +157,13 @@ export class SqueekClient {
           cache: "no-cache",
         },
       );
+      const receivedAt = this.clock();
       if (response.status === 429 || response.status === 503) {
         const failures = (this.failures.get(channel) || 0) + 1;
         this.failures.set(channel, failures);
         const retryAt = retryTime(
           response.headers.get("Retry-After"),
-          now,
+          receivedAt,
           Math.min(300000, 15000 * 2 ** Math.min(failures - 1, 4)),
         );
         this.next.set(channel, retryAt);
@@ -218,7 +200,9 @@ export class SqueekClient {
         ?.safeThroughBlock;
       const newSafe = (value as CoreData | EventsData).chain?.safeThroughBlock;
       const unchangedSince =
-        oldSafe && oldSafe === newSafe ? old.unchangedSince || now : now;
+        oldSafe && oldSafe === newSafe
+          ? old.unchangedSince || receivedAt
+          : receivedAt;
       this.failures.delete(channel);
       this.set(channel, {
         data,
@@ -226,7 +210,7 @@ export class SqueekClient {
         message: unavailable
           ? `Source unavailable: ${("reason" in value ? value.reason : "") || "No reason supplied"}. Retrying automatically.`
           : "",
-        checkedAt: now,
+        checkedAt: receivedAt,
         retryAt: 0,
         unchangedSince,
       } as Resource<never>);
@@ -235,7 +219,7 @@ export class SqueekClient {
       const failures = (this.failures.get(channel) || 0) + 1;
       this.failures.set(channel, failures);
       const retryAt =
-        now + Math.min(300000, interval * 2 ** Math.min(failures, 5));
+        this.clock() + Math.min(300000, interval * 2 ** Math.min(failures, 5));
       this.next.set(channel, retryAt);
       this.set(channel, {
         ...old,
@@ -309,15 +293,20 @@ export function liveView(feed: Feed): ViewData {
   const core = feed.core.data;
   const events = feed.events.data;
   const sameInstallation =
+    !coreOk ||
+    !measurementOk ||
     !feed.status.data ||
     !core ||
     feed.status.data.installationId === core.installationId;
   const sameEvents =
+    !coreOk ||
+    !eventsOk ||
     !events ||
     !core ||
     (events.installationId === core.installationId &&
       events.identities?.core === core.identities?.core &&
-      events.chain?.chainId === core.chain?.chainId);
+      events.chain?.chainId === core.chain?.chainId &&
+      events.chain?.target === core.chain?.target);
   const validWheel =
     measurementOk &&
     sameInstallation &&
@@ -373,7 +362,8 @@ export function liveView(feed: Feed): ViewData {
         (eventsOk
           ? "Confirmed chain and accepted measurement events"
           : "Event source stale"),
-    source: core?.chain?.target || "Squeekchain API",
+    source: (coreOk ? core?.chain?.target : eventsOk ? events?.chain?.target : null)
+      || "Squeekchain API",
     health,
     feed,
   };

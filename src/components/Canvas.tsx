@@ -34,7 +34,9 @@ export function WidgetContent({
     case "wheel":
       return (
         <>
-          <div className="widget-label">{widget.label}</div>
+          <div className="widget-label">
+            <span className="widget-label-text">{widget.label}</span>
+          </div>
           <div className="wheel-content">
             <div className={`wheel-symbol ${data.wheel}`}>
               <BrandMark size={66} />
@@ -59,7 +61,7 @@ export function WidgetContent({
       return (
         <>
           <div className="widget-label">
-            {widget.label}
+            <span className="widget-label-text">{widget.label}</span>
             <Icon name="speed" size={22} />
           </div>
           <div className="widget-value numeric">
@@ -77,7 +79,7 @@ export function WidgetContent({
       return (
         <>
           <div className="widget-label">
-            {widget.label}
+            <span className="widget-label-text">{widget.label}</span>
             <Icon name="block" size={22} />
           </div>
           <div
@@ -101,8 +103,8 @@ export function WidgetContent({
       return (
         <>
           <div className="widget-label">
-            {widget.label}
-            <span>
+            <span className="widget-label-text">{widget.label}</span>
+            <span className="widget-label-detail">
               {data.progress === null
                 ? "Unknown"
                 : `${data.progress.toFixed(1)}%`}
@@ -124,7 +126,7 @@ export function WidgetContent({
       return (
         <>
           <div className="widget-label">
-            {widget.label}
+            <span className="widget-label-text">{widget.label}</span>
             <Icon name="events" size={22} />
           </div>
           <div className="overlay-events">
@@ -153,7 +155,7 @@ export function WidgetContent({
         <div
           className={`custom-text ${widget.text.length > 60 || widget.text.split("\n").length > 2 ? "long-text" : ""}`}
         >
-          <div className="custom-text-label">
+          <div className="custom-text-label widget-label-text">
             {widget.label === WIDGETS.text.name
               ? "Welcome to the stream"
               : widget.label}
@@ -306,7 +308,7 @@ export function Canvas({
               opacity: widget.opacity,
               zIndex: index + 1,
             } as CSSProperties;
-            const className = `overlay-widget type-${widget.type} ${widget.label.length > 20 ? "has-long-label" : ""} ${widget.background ? "with-background" : ""} ${editable && selected === widget.id ? "is-selected" : ""}`;
+            const className = `overlay-widget type-${widget.type} ${widget.background ? "with-background" : ""} ${editable && selected === widget.id ? "is-selected" : ""}`;
             return editable ? (
               <button
                 type="button"

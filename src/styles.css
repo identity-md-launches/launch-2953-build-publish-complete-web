@@ -720,14 +720,21 @@ small {
 }
 .widget-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   font-size: var(--text-lg);
   line-height: 1.4;
 }
+.widget-label-text {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
 .widget-label > svg {
   color: var(--overlay-accent);
+  flex-shrink: 0;
 }
 .widget-value {
   font-size: var(--text-display);
@@ -746,13 +753,6 @@ small {
   font-size: var(--text-base);
   letter-spacing: 0;
   overflow-wrap: anywhere;
-}
-.has-long-label .widget-label {
-  font-size: var(--text-sm);
-  overflow-wrap: anywhere;
-}
-.has-long-label .widget-value {
-  font-size: var(--text-heading);
 }
 .widget-value.wheel-state {
   font-size: var(--text-heading);
@@ -806,9 +806,11 @@ small {
   border-radius: inherit;
   background: var(--overlay-accent);
 }
-.type-progress .widget-label > span {
+.widget-label-detail {
   color: var(--overlay-accent);
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .overlay-events {
   display: grid;
@@ -845,9 +847,11 @@ small {
 }
 .custom-text.long-text {
   font-size: var(--text-lg);
+  line-height: 1.4;
 }
 .custom-text-label {
   font-size: var(--text-sm);
+  line-height: 1.4;
   font-weight: 400;
   margin-block-end: 12px;
 }

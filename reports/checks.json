@@ -1,0 +1,540 @@
+{
+  "scope": "Repair of the existing Squeek Studio project; candidate origin/CSP checks are explicitly not a publication",
+  "interactionChecks": [
+    {
+      "name": "Standalone generation is reproducible and the browser module has no runtime compiler or require",
+      "passed": true,
+      "ms": 1688
+    },
+    {
+      "name": "Every template validates and survives a Unicode URL round trip",
+      "passed": true,
+      "ms": 8
+    },
+    {
+      "name": "Default presets and every widget's growing labels remain in the canonical safe area at every scale",
+      "passed": true,
+      "ms": 7
+    },
+    {
+      "name": "Standalone formats keep exact unsigned integer limits, valid timestamps and UUIDs",
+      "passed": true,
+      "ms": 13
+    },
+    {
+      "name": "Reject corrupt, oversized, unsupported and out-of-bounds presets",
+      "passed": true,
+      "ms": 1
+    },
+    {
+      "name": "Official JSON schemas accept public fixtures and reject wrong versions",
+      "passed": true,
+      "ms": 22
+    },
+    {
+      "name": "Live mapping preserves big heights, units, settled progress and event data",
+      "passed": true,
+      "ms": 13
+    },
+    {
+      "name": "Stale, faulty, mismatched and missing measurements stay unknown",
+      "passed": true,
+      "ms": 7
+    },
+    {
+      "name": "Partial failures preserve only healthy independent channels",
+      "passed": true,
+      "ms": 2
+    },
+    {
+      "name": "429 Retry-After is respected, with ETag revalidation and 304 reuse",
+      "passed": true,
+      "ms": 5
+    },
+    {
+      "name": "Delayed 429 and 503 cooldowns start at response receipt, for seconds, HTTP dates and fallback",
+      "passed": true,
+      "ms": 2
+    },
+    {
+      "name": "HTTP-200 unavailable responses never become zero or empty success",
+      "passed": true,
+      "ms": 3
+    },
+    {
+      "name": "Unavailable, failed and stale endpoints supply no deployment metadata to healthy independent channels",
+      "passed": true,
+      "ms": 4
+    },
+    {
+      "name": "Production export loads at a static subpath, with local font and metadata",
+      "passed": true,
+      "ms": 291
+    },
+    {
+      "name": "All templates apply and can be undone",
+      "passed": true,
+      "ms": 245
+    },
+    {
+      "name": "Rendered default templates fit the editor and transparent OBS canvas under the hosting CSP",
+      "passed": true,
+      "ms": 1304
+    },
+    {
+      "name": "Every widget wraps 20 W characters, maximum labels and explicit newlines at the right/bottom edge",
+      "passed": true,
+      "ms": 1736
+    },
+    {
+      "name": "Add, edit, position, scale, reorder, hide, remove and restore a widget",
+      "passed": true,
+      "ms": 784
+    },
+    {
+      "name": "Canvas colors and backgrounds persist across a reload",
+      "passed": true,
+      "ms": 288
+    },
+    {
+      "name": "Save, load and delete a local preset with modal keyboard focus",
+      "passed": true,
+      "ms": 1561
+    },
+    {
+      "name": "JSON download, validated import and invalid import recovery work",
+      "passed": true,
+      "ms": 155
+    },
+    {
+      "name": "OBS link copies a portable snapshot, with no editor chrome and true transparency",
+      "passed": true,
+      "ms": 854
+    },
+    {
+      "name": "Live mode shows real-shaped schema-validated telemetry and events",
+      "passed": true,
+      "ms": 91
+    },
+    {
+      "name": "Unavailable and rate-limited live sources show unknown values and retry details",
+      "passed": true,
+      "ms": 433
+    },
+    {
+      "name": "Independent endpoint outages and schema mismatches are distinct in the rendered live editor",
+      "passed": true,
+      "ms": 767
+    },
+    {
+      "name": "Mobile layouts have no horizontal overflow and retain the primary action",
+      "passed": true,
+      "ms": 837
+    },
+    {
+      "name": "Reduced motion and keyboard focus remain usable",
+      "passed": true,
+      "ms": 188
+    },
+    {
+      "name": "No page script errors or missing local assets",
+      "passed": true,
+      "ms": 1
+    },
+    {
+      "name": "Axe WCAG audit on desktop, mobile and OBS dialog",
+      "passed": true,
+      "ms": 4128
+    },
+    {
+      "name": "WebKit primary OBS setup action",
+      "passed": null,
+      "limitation": "WebKit runtime unavailable; no WebKit result claimed"
+    }
+  ],
+  "pageErrors": [],
+  "missingLocalAssets": [],
+  "axe": [
+    {
+      "width": 1440,
+      "view": "editor",
+      "violations": 0,
+      "incomplete": 1
+    },
+    {
+      "width": 390,
+      "view": "editor",
+      "violations": 0,
+      "incomplete": 1
+    },
+    {
+      "width": 390,
+      "view": "OBS dialog",
+      "violations": 0,
+      "incomplete": 1
+    }
+  ],
+  "designProbe": [
+    {
+      "name": "render",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 8836,
+      "output": "renders, no script errors or missing local files"
+    },
+    {
+      "name": "layout",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "no horizontal scroll at 320, 390 or 1440\nno text box overlaps another\nno floating control covers text\nno text cut off by overflow: hidden"
+    },
+    {
+      "name": "targets",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "all 28 controls at least 24px or spaced at 390\n20 under the 44px comfortable size"
+    },
+    {
+      "name": "contrast",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "all measured text meets 4.5:1 (3:1 large)\n46 text boxes over images, video, canvas or gradients not measured"
+    },
+    {
+      "name": "casing",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "no all-caps text in content"
+    },
+    {
+      "name": "tracking",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "letter-spacing natural in content (display type may run tight)"
+    },
+    {
+      "name": "eyebrows",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 1,
+      "output": "no kicker labels above headings"
+    },
+    {
+      "name": "type-sizes",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 1,
+      "output": "390: 6 sizes in use, 6 with one-offs (12px×28, 14px×10, 16px×4, 20px×8, 28px×2, 40px×2)\n1440: 6 sizes in use, 6 with one-offs (12px×54, 14px×18, 16px×3, 20px×9, 28px×3, 40px×2)\nbar: 6 sizes used more than once, 8 counting one-offs, per width"
+    },
+    {
+      "name": "type-faces",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "families (1): dm sans\nweights (3): 400, 500, 600\nweight 500 outside mono (noted, not counted): 18, e.g. header.app-header > div.header-actions > button.button.primary:nth-of-type(3) > span \"Get overlay link\""
+    },
+    {
+      "name": "glyphs",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 1,
+      "output": "no em dashes or emoji in text"
+    },
+    {
+      "name": "slogans",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "3 two-beat lines; a stack is four or more, so keep the best and cut the rest:\n\"Your stream stays yours. Transparent. Wallet-free. Ready for OBS.\" (#workspace > div.workspace.mobile-pane-templates:nth-of-type(2) > section.preview-column > div.preview-bottom:nth-of-type(5))\n\"Transparent. Wallet-free. Ready for OBS.\" (div.workspace.mobile-pane-templates:nth-of-type(2) > section.preview-column > div.preview-bottom:nth-of-type(5) > span:nth-of-type(2))\n\"A starting point. Make it your own.\" (div.workspace.mobile-pane-templates:nth-of-type(2) > aside.library-column:nth-of-type(1) > section.templates-section:nth-of-type(1) > p.section-note)"
+    },
+    {
+      "name": "repetition",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 2,
+      "output": "no repeated lines"
+    },
+    {
+      "name": "copy-budget",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "prose on the first screen: 24 words at 390 (bar 60), 45 at 1440 (bar 90)\nall words on the first screen: 109 at 390, 192 at 1440\nwhole page: 235 words, 68 of them prose"
+    },
+    {
+      "name": "chrome",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "border and shadow together: 0\ncards inside cards: 0\ngradient text: 0"
+    },
+    {
+      "name": "motion",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "transition: all on 0 elements\nendless animations: 0; still running with reduced motion: 0"
+    },
+    {
+      "name": "share",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 0,
+      "output": "title \"Squeek Studio · Make the wheel part of your stream\", favicon, og:title, og:image, description"
+    }
+  ],
+  "candidate": {
+    "checkedAt": "2026-11-04T17:25:18.348Z",
+    "site": "https://squeek-studio-make-the-wheel-par.imd.site/",
+    "overlay": "https://squeek-studio-make-the-wheel-par.imd.site/#/overlay",
+    "mode": "Unpublished dist bytes at the existing HTTPS origin; real host document headers/CSP retained",
+    "publishedReplacementVerified": false,
+    "checks": [
+      {
+        "name": "hosted editor startup and primary action at 390",
+        "passed": true,
+        "details": {
+          "copiedPortableLink": true,
+          "fatalErrors": []
+        }
+      },
+      {
+        "name": "real live API requests and endpoint diagnostics",
+        "passed": true,
+        "details": {
+          "diagnostics": "/v1/status\nok\n\nHardware measurement\n\nLast checked 5:25:21 PM\n/v1/core\nok\n\n12-confirmation settled state\n\nLast checked 5:25:21 PM\n/v1/events\nok\n\nConfirmed chain and accepted measurement events\n\nLast checked 5:25:21 PM"
+        }
+      },
+      {
+        "name": "hosted transparent OBS route",
+        "passed": true,
+        "details": {
+          "colors": [
+            "rgba(0, 0, 0, 0)",
+            "rgba(0, 0, 0, 0)",
+            "rgba(0, 0, 0, 0)"
+          ],
+          "fatalErrors": [],
+          "demoSnapshot": true
+        }
+      },
+      {
+        "name": "live OBS route renders independent of editor state",
+        "passed": true,
+        "details": {
+          "source": "Live source · sepolia",
+          "fatalErrors": []
+        }
+      }
+    ],
+    "endpoints": [
+      {
+        "channel": "core",
+        "http": 200,
+        "schemaValid": true,
+        "classification": "valid response",
+        "reason": null
+      },
+      {
+        "channel": "status",
+        "http": 200,
+        "schemaValid": true,
+        "classification": "valid response",
+        "reason": null
+      },
+      {
+        "channel": "events",
+        "http": 200,
+        "schemaValid": true,
+        "classification": "valid response",
+        "reason": null
+      },
+      {
+        "channel": "core",
+        "http": 200,
+        "schemaValid": true,
+        "classification": "valid response",
+        "reason": null
+      },
+      {
+        "channel": "status",
+        "http": 200,
+        "schemaValid": true,
+        "classification": "valid response",
+        "reason": null
+      },
+      {
+        "channel": "events",
+        "http": 200,
+        "schemaValid": true,
+        "classification": "valid response",
+        "reason": null
+      }
+    ],
+    "host": {
+      "status": 200,
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; media-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+      "cid": "bafybeidjev2avzhp2hy42wrz6uk55s5hcmj7jo57q7kxs6shv3w7z7ks6e"
+    },
+    "console": {
+      "editor": {
+        "errors": [],
+        "consoleErrors": []
+      },
+      "overlay": {
+        "errors": [],
+        "consoleErrors": []
+      }
+    }
+  },
+  "publishedBaseline": {
+    "checkedAt": "2026-11-04T17:25:18.600Z",
+    "site": "https://squeek-studio-make-the-wheel-par.imd.site/",
+    "overlay": "https://squeek-studio-make-the-wheel-par.imd.site/#/overlay",
+    "mode": "Unmodified published site; no interception",
+    "publishedReplacementVerified": false,
+    "checks": [
+      {
+        "name": "hosted editor startup and primary action at 390",
+        "passed": false,
+        "error": "locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('heading', { name: 'Customize your OBS overlay', exact: true }) to be visible\u001b[22m\n"
+      },
+      {
+        "name": "real live API requests and endpoint diagnostics",
+        "passed": false,
+        "error": "locator.click: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Live', exact: true })\u001b[22m\n"
+      },
+      {
+        "name": "hosted transparent OBS route",
+        "passed": false,
+        "error": "locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.obs-output .overlay-widget').first() to be visible\u001b[22m\n"
+      },
+      {
+        "name": "live OBS route renders independent of editor state",
+        "passed": false,
+        "error": "locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.obs-output .overlay-widget').first() to be visible\u001b[22m\n"
+      }
+    ],
+    "endpoints": [],
+    "host": {
+      "status": 200,
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; media-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+      "cid": "bafybeidjev2avzhp2hy42wrz6uk55s5hcmj7jo57q7kxs6shv3w7z7ks6e"
+    },
+    "console": {
+      "editor": {
+        "errors": [
+          "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'\".\n"
+        ],
+        "consoleErrors": [
+          "Error compiling schema, function code: const schema1 = scope.schema[1];const schema2 = scope.schema[2];const schema3 = scope.schema[3];const schema5 = scope.schema[4];const pattern0 = scope.pattern[0];const pattern1 = scope.pattern[1];return function validate1(data, {instancePath=\"\", parentData, par"
+        ]
+      },
+      "overlay": {
+        "errors": [
+          "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'\".\n"
+        ],
+        "consoleErrors": [
+          "Error compiling schema, function code: const schema1 = scope.schema[1];const schema2 = scope.schema[2];const schema3 = scope.schema[3];const schema5 = scope.schema[4];const pattern0 = scope.pattern[0];const pattern1 = scope.pattern[1];return function validate1(data, {instancePath=\"\", parentData, par"
+        ]
+      }
+    }
+  },
+  "schemas": [
+    {
+      "channel": "status",
+      "url": "https://docs.squeekchain.com/assets/api/status.json",
+      "pinnedSha256": "8f1fd930bf46625f60c869d0f25e1118f186ba853a7f43c14b566748336a7df3",
+      "structurallyEqualToFetchedOfficial": true
+    },
+    {
+      "channel": "core",
+      "url": "https://docs.squeekchain.com/assets/api/core.json",
+      "pinnedSha256": "bbe7af09900af36cdd5db9398b5d7ee6759b5c4b46568036b6e9551e9d178304",
+      "structurallyEqualToFetchedOfficial": true
+    },
+    {
+      "channel": "events",
+      "url": "https://docs.squeekchain.com/assets/api/events.json",
+      "pinnedSha256": "dccbe7c70add583f9a2ef93d0b5c3e74168cef0c4f35317011058d554f15ab13",
+      "structurallyEqualToFetchedOfficial": true
+    }
+  ],
+  "dist": [
+    {
+      "path": "dist/assets/index-DND6O2-i.css",
+      "bytes": 32028,
+      "sha256": "12daf017402ce549d9971e35c4b27b10d77ba6a5ce70a2b732b31b27de5fbe61"
+    },
+    {
+      "path": "dist/assets/index-qjlx7Vto.js",
+      "bytes": 588154,
+      "sha256": "61646de022aba0f6498e3ebf87e3b8e9e6cf3362eff846708ca5d5572a61cf08"
+    },
+    {
+      "path": "dist/favicon.svg",
+      "bytes": 706,
+      "sha256": "f7431b7a152d8f8364b38a2172ba48232aae04a90c9520c85c07691c7ae89a44"
+    },
+    {
+      "path": "dist/fonts/OFL.txt",
+      "bytes": 4482,
+      "sha256": "9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1"
+    },
+    {
+      "path": "dist/fonts/dm-sans-latin.woff2",
+      "bytes": 36932,
+      "sha256": "9fea608a947e67020c33cad9a6fe3d60c54119dfb8cff87768a8117a15ed7543"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 1438,
+      "sha256": "7f03458f6487571f8d52385b072568cd9c67ffd88f7984d927027d0f9b57daed"
+    },
+    {
+      "path": "dist/licenses/validator-runtime.txt",
+      "bytes": 2230,
+      "sha256": "a9fcc60b771c5328add338c8bc49be96844a3e131f5510e6765cc3bfc6be6100"
+    },
+    {
+      "path": "dist/scene.svg",
+      "bytes": 3624,
+      "sha256": "391555fbe2eb4288b17d28e5cf5d51c2f44342e31ef912c5c5c36b0339f3179a"
+    },
+    {
+      "path": "dist/social-card.png",
+      "bytes": 57259,
+      "sha256": "528c4948b42ce9cc32012e7762120a26505100a6798199cf00f2231741f72480"
+    },
+    {
+      "path": "dist/social-card.svg",
+      "bytes": 1672,
+      "sha256": "821f49a14b34cd8205390fe0acf885151ad3ae597c23b548729c15bd8274c059"
+    }
+  ],
+  "transparencyRasterChecks": [
+    {
+      "path": "reports/screenshots/overlay-live.png",
+      "width": 1280,
+      "height": 720,
+      "minAlpha": 0,
+      "maxAlpha": 255,
+      "transparentPixels": 834450,
+      "totalPixels": 921600
+    },
+    {
+      "path": "reports/screenshots/long-label-right-edge.png",
+      "width": 1280,
+      "height": 720,
+      "minAlpha": 0,
+      "maxAlpha": 255,
+      "transparentPixels": 870353,
+      "totalPixels": 921600
+    }
+  ]
+}

@@ -3,16 +3,21 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { createServer } from "node:http";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { openSync, closeSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
+import { checkRuntime } from "./check-runtime.mjs";
+import { generateValidators } from "./generate-validators.mjs";
 
 const require = createRequire(import.meta.url);
 // Scratch fallback lets contributors check without changing a protected dependency directory.
 const locations = [process.cwd(), resolve("test/scratch/toolchain")];
 const dependency = (name) => require.resolve(name, { paths: locations });
 const { build } = await import(pathToFileURL(dependency("esbuild")).href);
-const { chromium, webkit } = require(dependency("playwright"));
-const { expect } = require(dependency("@playwright/test"));
+const { chromium, webkit } = process.env.IMD_PLAYWRIGHT
+  ? await import(pathToFileURL(process.env.IMD_PLAYWRIGHT).href)
+  : require(dependency("playwright"));
+const { expect } = process.env.IMD_PLAYWRIGHT
+  ? createRequire(process.env.IMD_PLAYWRIGHT)("playwright/test")
+  : require(dependency("@playwright/test"));
 const axeModule = require(dependency("@axe-core/playwright"));
 const AxeBuilder = axeModule.default || axeModule;
 const output = resolve("test/scratch/validation");
@@ -84,6 +89,13 @@ const freshFixture = (channel, now = Date.now()) => {
   }
   return value;
 };
+await check("Standalone generation is reproducible and the browser module has no runtime compiler or require", async () => {
+  await generateValidators({ check: true });
+  checkRuntime(await readFile("src/generated/validators.js", "utf8"), "validators.js");
+  const { readdir } = await import("node:fs/promises");
+  for (const name of await readdir("dist/assets"))
+    if (name.endsWith(".js")) checkRuntime(await readFile(`dist/assets/${name}`, "utf8"), name);
+});
 await check(
   "Every template validates and survives a Unicode URL round trip",
   () => {
@@ -95,6 +107,38 @@ await check(
     }
   },
 );
+await check("Default presets and every widget's growing labels remain in the canonical safe area at every scale", () => {
+  for (const template of ["minimal", "cozy", "neon"]) {
+    for (const w of model.templateConfig(template).widgets) {
+      const size = model.widgetSize(w);
+      assert.ok(w.x + size.width * w.scale <= model.WIDTH);
+      assert.ok(w.y + size.height * w.scale <= model.HEIGHT - 32);
+    }
+  }
+  for (const type of Object.keys(model.WIDGETS))
+    for (const label of ["W".repeat(20), "W".repeat(36), "A complete label with several words", "轮".repeat(36), "\n".repeat(36)])
+      for (const scale of [0.5, 1, 1.6]) {
+        const w = model.clampWidget({ ...model.createWidget(type), label, x: 1280, y: 720, scale });
+        const size = model.widgetSize(w);
+        assert.ok(w.x >= 0 && w.y >= 0);
+        assert.ok(w.x + size.width * w.scale <= model.WIDTH);
+        assert.ok(w.y + size.height * w.scale <= model.HEIGHT - 32);
+        assert.deepEqual(model.clampWidget(w), w);
+      }
+});
+await check("Standalone formats keep exact unsigned integer limits, valid timestamps and UUIDs", () => {
+  for (const [field, bits] of [["blockHeight", 64], ["cumulativeBlockUnits", 96], ["authorizationNonce", 256]]) {
+    const max = ((1n << BigInt(bits)) - 1n).toString();
+    api.validateApi("core", { ...fixture.core, core: { ...fixture.core.core, [field]: max } });
+    for (const value of [(1n << BigInt(bits)).toString(), "-1", "01", "1.1", "1e2", "", "9".repeat(79)])
+      assert.throws(() => api.validateApi("core", { ...fixture.core, core: { ...fixture.core.core, [field]: value } }));
+  }
+  for (const value of ["not-a-date", "2026-02-30T00:00:00Z", "2026-11-04T25:00:00Z"])
+    assert.throws(() => api.validateApi("status", { ...fixture.status, generatedAt: value }));
+  assert.throws(() => api.validateApi("status", {
+    ...fixture.status, measurement: { ...fixture.status.measurement, counterEpoch: "not-a-uuid" },
+  }));
+});
 await check(
   "Reject corrupt, oversized, unsupported and out-of-bounds presets",
   () => {
@@ -309,6 +353,28 @@ await check(
     }
   },
 );
+await check("Delayed 429 and 503 cooldowns start at response receipt, for seconds, HTTP dates and fallback", async () => {
+  for (const status of [429, 503]) for (const header of ["3", "date", null, "invalid"]) {
+    const start = Date.UTC(2026, 10, 4, 12);
+    let clock = start, attempts = 0;
+    const testClient = new api.SqueekClient(() => {}, async () => {
+      attempts++;
+      clock += 8000; // a slow response; no real-time wait
+      return new Response("{}", { status, headers: header === null ? {} : {
+        "Retry-After": header === "date" ? new Date(start + 11000).toUTCString() : header,
+      } });
+    }, () => clock);
+    await testClient.poll("status");
+    const deadline = start + 8000 + (["3", "date"].includes(header) ? 3000 : 15000);
+    clock = deadline - 1;
+    await testClient.poll("status");
+    assert.equal(attempts, 1, `${status} ${header}: retried early`);
+    clock = deadline;
+    await testClient.poll("status");
+    assert.equal(attempts, 2);
+    testClient.stop();
+  }
+});
 await check(
   "HTTP-200 unavailable responses never become zero or empty success",
   async () => {
@@ -337,8 +403,37 @@ await check(
     testClient.stop();
     assert.equal(api.liveView(state).height, null);
     assert.match(state.core.message, /indexer_unavailable/);
+    assert.equal(api.liveView(state).events.length, fixture.events.events.length);
+    assert.equal(api.liveView(state).wheel, "running");
   },
 );
+await check("Unavailable, failed and stale endpoints supply no deployment metadata to healthy independent channels", () => {
+  for (const health of ["unavailable", "error", "loading", "stale", "rate-limited"]) {
+    const feed = clone(latest);
+    feed.core.health = health;
+    feed.core.data = { schemaVersion: 1, installationId: "different-outage-installation", status: "unavailable", reason: "indexer_unavailable" };
+    let view = api.liveView(feed);
+    assert.equal(view.height, null);
+    assert.equal(view.wheel, "running");
+    assert.equal(view.events.length, fixture.events.events.length);
+    assert.doesNotMatch(view.eventsNote, /mismatch/);
+    feed.status.health = "error";
+    view = api.liveView(feed);
+    assert.equal(view.wheel, "unknown");
+    assert.equal(view.events.length, fixture.events.events.length);
+  }
+  const mismatch = clone(latest);
+  mismatch.events.data.chain.chainId = "1";
+  assert.equal(api.liveView(mismatch).events, null);
+  assert.match(api.liveView(mismatch).eventsNote, /deployment mismatch/);
+  mismatch.events.health = "unavailable";
+  mismatch.events.message = "Source unavailable: indexer_unavailable";
+  assert.doesNotMatch(api.liveView(mismatch).eventsNote, /mismatch/);
+});
+
+// Captured from the real IMD host. No unsafe-eval or bypassCSP is added for tests.
+const hostingCsp = (await readFile("scripts/fixtures/hosting-csp.txt", "utf8")).trim();
+assert.ok(!hostingCsp.split(";").find((d) => d.trim().startsWith("script-src ")).includes("'unsafe-eval'"));
 
 const mime = {
   ".html": "text/html",
@@ -356,6 +451,11 @@ const server = createServer(async (request, response) => {
       new URL(request.url, "http://localhost").pathname,
     );
     if (!pathname.startsWith("/preview/")) throw new Error("Outside preview");
+    if (pathname === "/preview/csp-probe.js") {
+      response.writeHead(200, { "Content-Type": "application/javascript", "Content-Security-Policy": hostingCsp });
+      response.end('try { new Function("return 1")(); document.documentElement.dataset.evalProbe="allowed"; } catch (error) { document.documentElement.dataset.evalProbe=error.name; }');
+      return;
+    }
     const filename = resolve(
       root,
       pathname.slice("/preview/".length) || "index.html",
@@ -364,6 +464,7 @@ const server = createServer(async (request, response) => {
     const body = await readFile(filename);
     response.writeHead(200, {
       "Content-Type": mime[extname(filename)] || "application/octet-stream",
+      "Content-Security-Policy": hostingCsp,
     });
     response.end(body);
   } catch {
@@ -373,14 +474,6 @@ const server = createServer(async (request, response) => {
 });
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const url = `http://127.0.0.1:${server.address().port}/preview/`;
-// Short /proc paths avoid Unix socket path limits in deeply nested contributor workspaces.
-let tempFd;
-if (process.platform === "linux") {
-  const temp = `${output}/tmp`;
-  await mkdir(temp, { recursive: true });
-  tempFd = openSync(temp, "r");
-  process.env.TMPDIR = `/proc/${process.pid}/fd/${tempFd}`;
-}
 let browser;
 const browserErrors = [],
   missingAssets = [];
@@ -414,6 +507,21 @@ try {
         headers: { ...headers, "Retry-After": "60" },
         body: '{"error":"rate_limited"}',
       });
+    if ((responseMode === "core-outage" && channel === "core") ||
+        (responseMode === "events-outage" && channel === "events"))
+      return route.fulfill({
+        status: 200, headers, contentType: "application/json",
+        body: JSON.stringify({
+          schemaVersion: channel === "core" ? 1 : 3,
+          installationId: "unavailable-source-installation",
+          status: "unavailable", reason: "indexer_unavailable",
+        }),
+      });
+    if (responseMode === "schema-mismatch" && channel === "core")
+      return route.fulfill({
+        status: 200, headers, contentType: "application/json",
+        body: JSON.stringify({ ...freshFixture(channel), schemaVersion: 99 }),
+      });
     return route.fulfill({
       status: 200,
       headers,
@@ -432,13 +540,35 @@ try {
       (key) => JSON.parse(localStorage.getItem(key)),
       model.DRAFT_KEY,
     );
+  const labelBounds = async (tab) => {
+    await tab.evaluate(() => document.fonts.ready);
+    await tab.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    return tab.evaluate(() => {
+      const stage = document.querySelector(".overlay-stage").getBoundingClientRect();
+      const issues = [];
+      for (const label of new Set(document.querySelectorAll(".widget-label-text, .custom-text > div"))) {
+        const widget = label.closest(".overlay-widget");
+        const box = widget.getBoundingClientRect();
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        const rects = [...range.getClientRects()];
+        if (box.left < stage.left - .5 || box.right > stage.right + .5 || box.top < stage.top - .5 || box.bottom > stage.bottom - 32 * stage.width / 1280 + .5)
+          issues.push({ type: widget.className, problem: "widget outside safe canvas" });
+        for (const r of rects) if (r.width && (r.left < box.left - .5 || r.right > box.right + .5 || r.bottom > box.bottom + .5 || r.bottom > stage.bottom + .5))
+          issues.push({ type: widget.className, label: label.textContent, problem: "label outside widget or canvas" });
+        if (getComputedStyle(label).textOverflow === "ellipsis" || getComputedStyle(label).overflow === "hidden")
+          issues.push({ problem: "label is clipped" });
+      }
+      return issues;
+    });
+  };
   await check(
     "Production export loads at a static subpath, with local font and metadata",
     async () => {
       await page.goto(url);
       await page.evaluate(() => document.fonts.ready);
       await expect(
-        page.getByRole("heading", { name: "Your overlay, your way." }),
+        page.getByRole("heading", { name: "Customize your OBS overlay" }),
       ).toBeVisible();
       assert.equal(
         await page.evaluate(() => document.fonts.check('400 14px "DM Sans"')),
@@ -452,6 +582,16 @@ try {
       ])
         assert.ok(await page.locator(selector).count());
       assert.equal(apiCalls, 0);
+      // A positive control proves CSP enforcement, instead of merely checking its header.
+      await page.evaluate((src) => new Promise((resolve, reject) => {
+        // Load asynchronously as an ordinary resource, outside DevTools' evaluation scope.
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.append(script);
+      }), `${url}csp-probe.js`);
+      assert.equal(await page.locator("html").getAttribute("data-eval-probe"), "EvalError");
     },
   );
   await check("All templates apply and can be undone", async () => {
@@ -469,6 +609,56 @@ try {
       .getByRole("button", { name: /Cozy Broadcast A warm welcome/ })
       .click();
     assert.equal((await draft()).widgets.length, 6);
+  });
+  await check("Rendered default templates fit the editor and transparent OBS canvas under the hosting CSP", async () => {
+    for (const template of ["minimal", "cozy", "neon"]) {
+      const config = model.templateConfig(template);
+      await page.locator('input[type="file"]').setInputFiles({ name: "default.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(config)) });
+      await expect.poll(async () => (await draft()).template).toBe(template);
+      assert.deepEqual(await labelBounds(page), []);
+      const overlay = await context.newPage();
+      const errors = [];
+      overlay.on("pageerror", (error) => errors.push(error.message));
+      await overlay.goto(`${url}#/overlay?config=${model.encodeConfig(config)}`);
+      await expect(overlay.locator(".overlay-widget")).toHaveCount(config.widgets.length);
+      assert.deepEqual(await labelBounds(overlay), []);
+      assert.deepEqual(errors, []);
+      await overlay.close();
+    }
+    await page.getByRole("button", { name: /Cozy Broadcast A warm welcome/ }).click();
+  });
+  await check("Every widget wraps 20 W characters, maximum labels and explicit newlines at the right/bottom edge", async () => {
+    for (const label of ["W".repeat(20), "W".repeat(36), "A complete label with several words", "轮".repeat(36), "\n".repeat(36)])
+      for (const scale of [.5, 1, 1.6]) {
+        const config = model.templateConfig("cozy");
+        config.widgets = Object.keys(model.WIDGETS).map((type) => model.clampWidget({
+          ...model.createWidget(type), label, scale, x: 1280, y: 720,
+          text: "W".repeat(29) + "\n" + "W".repeat(29) + "\n" + "W".repeat(29) + "\n" + "W".repeat(30),
+        }));
+        await page.locator('input[type="file"]').setInputFiles({ name: "edge.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(config)) });
+        await expect.poll(async () => (await draft()).widgets[0].label).toBe(label);
+        // The label may match the last scenario, so also wait for its expected geometry.
+        await expect.poll(async () => (await draft()).widgets[0].scale).toBe(config.widgets[0].scale);
+        assert.deepEqual(await labelBounds(page), [], `${JSON.stringify(label)} at ${scale}`);
+      }
+    await page.getByRole("button", { name: /Cozy Broadcast A warm welcome/ }).click();
+    await page.locator(".overlay-widget.type-speed").click();
+    await page.getByLabel("Label", { exact: true }).fill("W".repeat(20));
+    await page.getByLabel("X position", { exact: true }).fill("1280");
+    await page.getByLabel("Y position", { exact: true }).fill("720");
+    assert.deepEqual(await labelBounds(page), []);
+    const snapshot = await draft();
+    // Isolate the edge case in the OBS evidence so another user-positioned layer
+    // cannot obscure the label being inspected. Layer overlap is intentional editing behavior.
+    snapshot.widgets = snapshot.widgets.filter((w) => w.type === "speed");
+    const overlay = await context.newPage();
+    await overlay.setViewportSize({ width: 1280, height: 720 });
+    await overlay.goto(`${url}#/overlay?config=${model.encodeConfig(snapshot)}`);
+    await expect(overlay.locator(".type-speed .widget-label-text")).toHaveText("W".repeat(20));
+    assert.deepEqual(await labelBounds(overlay), []);
+    await overlay.screenshot({ path: `${output}/long-label-right-edge.png`, omitBackground: true });
+    await overlay.close();
+    await page.getByRole("button", { name: /Cozy Broadcast A warm welcome/ }).click();
   });
   await check(
     "Add, edit, position, scale, reorder, hide, remove and restore a widget",
@@ -687,6 +877,33 @@ try {
       await page.getByRole("button", { name: "Demo", exact: true }).click();
     },
   );
+  await check("Independent endpoint outages and schema mismatches are distinct in the rendered live editor", async () => {
+    for (const mode of ["core-outage", "events-outage", "schema-mismatch"]) {
+      responseMode = mode;
+      await page.getByRole("button", { name: "Live", exact: true }).click();
+      await page.reload();
+      await expect(page.locator(".wheel-state")).toHaveText("Running");
+      await expect(page.locator(".data-status")).toContainText("Source needs attention");
+      await page.locator(".source-details summary").click();
+      const sources = page.locator(".source-list");
+      await expect(sources).not.toContainText("deployment mismatch");
+      await expect(sources).not.toContainText("installation mismatch");
+      if (mode === "events-outage") {
+        await expect(page.locator(".type-block .numeric")).not.toHaveText("Unknown");
+        await expect(page.locator(".type-events .event-empty")).toContainText("unavailable");
+        await expect(sources).toContainText("Source unavailable: indexer_unavailable");
+      } else {
+        await expect(page.locator(".type-block .numeric")).toHaveText("Unknown");
+        await expect(page.locator(".overlay-event")).toHaveCount(3);
+        await expect(page.locator(".type-events .event-empty")).toHaveCount(0);
+        if (mode === "schema-mismatch")
+          await expect(sources).toContainText("Schema mismatch in core response");
+        else await expect(sources).toContainText("Source unavailable: indexer_unavailable");
+      }
+    }
+    responseMode = "ok";
+    await page.getByRole("button", { name: "Demo", exact: true }).click();
+  });
   await check(
     "Mobile layouts have no horizontal overflow and retain the primary action",
     async () => {
@@ -844,7 +1061,6 @@ try {
 } finally {
   if (browser) await browser.close();
   await new Promise((r) => server.close(r));
-  if (tempFd !== undefined) closeSync(tempFd);
   await writeFile(
     `${output}/results.json`,
     JSON.stringify({ checks, browserErrors, missingAssets }, null, 2),
