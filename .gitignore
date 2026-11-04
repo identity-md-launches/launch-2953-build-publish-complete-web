@@ -1,0 +1,9 @@
+# Explicit path budget: artifacts/path-budget.md (this file <= 1 KiB).
+# Generated dependency/cache directories only, at every nesting level.
+**/node_modules/
+**/.cache/
+**/npm-cache/
+**/.vite/
+/test/scratch/
+*.tsbuildinfo
+# dist/ is the required static export and is intentionally included.

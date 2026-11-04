@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<rect width="1200" height="630" rx="0" fill="#121411"/>
+<rect x="668" y="54" width="468" height="522" rx="20" fill="#20271e"/>
+<path d="m668 400 110-135 112 113 95-155 151 185v168H668Z" fill="#364d3b"/>
+<path d="m668 456 112-81 100 85 132-90 124 101v105H668Z" fill="#263d2d"/>
+<circle cx="996" cy="159" r="38" fill="#e7d9ac"/><circle cx="1007" cy="147" r="34" fill="#20271e"/>
+<g transform="translate(776 253) scale(3.5)" fill="none" stroke="#f2c078" stroke-width="2.7" stroke-linecap="round"><circle cx="29" cy="31" r="22"/><path d="m13 15 6 6m26-6-6 6M7 31h8m28 0h8M13 47l7-7m24 7-6-6M29 9v8M29 45v8M20 58h19M29 53v5M50 8a13 13 0 0 1 8 9M50 1a20 20 0 0 1 15 15"/><path d="M18 35c0-6 4-11 10-11 3 0 6 1 8 4 5 0 8 3 8 7 0 5-5 7-12 7H22c-5 0-7-3-4-7Z" fill="#f2c078" stroke="none"/><circle cx="34" cy="25" r="5" fill="#f2c078" stroke="none"/><circle cx="34" cy="25" r="2" fill="#121411" stroke="none"/><circle cx="38" cy="32" r="1.5" fill="#121411" stroke="none"/></g>
+<g font-family="Arial,sans-serif"><text x="70" y="125" fill="#f2c078" font-size="30">Squeek Studio</text><text x="70" y="262" fill="#f5f0e6" font-size="64" font-weight="600">Your overlay,</text><text x="70" y="337" fill="#f5f0e6" font-size="64" font-weight="600">your way.</text><text x="70" y="405" fill="#b5b7aa" font-size="23">Make the wheel part of your stream.</text><rect x="70" y="475" width="276" height="57" rx="9" fill="#f2c078"/><text x="96" y="512" fill="#121411" font-size="23">Made for your OBS scene</text><circle cx="389" cy="503" r="5" fill="#a6dfc0"/><text x="407" y="511" fill="#b5b7aa" font-size="20">Wallet-free</text></g>
+</svg>
